@@ -8,7 +8,13 @@ from src.play_by_play import get_game_play
 # Declare which games to lookup
 total_games = int(82 * 32 / 2)
 # games = list(range(1, total_games))
+<<<<<<< HEAD
 games = [1, 2, 19, 20, 25, 30, 833, 810, 526, 529, 858, 860]
+||||||| e2570b6
+games = [1, 2, 20, 30, 833, 810, 526, 529, 858, 860]
+=======
+games = [1, 2, 20, 25, 39, 30, 833, 810, 526, 529, 858, 860]
+>>>>>>> 36bb4b33ba0a819611be2aaa87ad3804a1b8a380
 
 full_df = pd.DataFrame()
 games_scraped = []
