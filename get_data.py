@@ -1,12 +1,10 @@
+import pandas as pd
 import random
 import time
-
-import pandas as pd
-
-from src.play_by_play import get_game_play
-from src.game_summary import game_summary_to_pd_2
-from src.x_y_coord import game_details_coord
 from src.capfriendly_scrape import get_salary_info
+from src.game_summary import game_summary_to_pd_2
+from src.play_by_play import get_game_play
+from src.x_y_coord import game_details_coord
 
 # Declare which games to lookup
 total_games = int(82 * 32 / 2)
@@ -135,7 +133,6 @@ print(games_scraped)
 print('failed scrapes:')
 print(failed_scrape)
 
-
 #################################################
 # Game summary
 #################################################
@@ -176,7 +173,6 @@ print('successful scrapes:')
 print(games_scraped)
 print('failed scrapes:')
 print(failed_scrape)
-
 
 #################################################
 # X & Y coordinates
@@ -226,14 +222,13 @@ names_col = ['Away_p1_name', 'Away_p2_name', 'Away_p3_name',
 for col in names_col:
     names.extend(play_by_play_2021[col].tolist())
 
-# player_list = pd.Series(names).value_counts().index
-player_list = pd.Series(names).value_counts().index[0:10]
+player_list = pd.Series(names).value_counts().index
+# player_list = pd.Series(names).value_counts().index[0:10]
 
 # Go through each player
 full_df = pd.DataFrame()
 players_scraped = []
 failed_scrape = []
-
 
 for player in player_list:
 
@@ -262,4 +257,3 @@ print('successful scrapes:')
 print(players_scraped)
 print('failed scrapes:')
 print(failed_scrape)
-
