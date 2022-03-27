@@ -6,6 +6,7 @@ import pandas as pd
 from src.play_by_play import get_game_play
 from src.game_summary import game_summary_to_pd_2
 from src.x_y_coord import game_details_coord
+from src.capfriendly_scrape import get_salary_info
 
 # Declare which games to lookup
 total_games = int(82 * 32 / 2)
@@ -181,10 +182,6 @@ print(failed_scrape)
 # X & Y coordinates
 #################################################
 
-total_games = int(82 * 32 / 2)
-games = list(range(1, total_games))
-# games = [1, 2, 13, 20, 25, 39, 30, 833, 810, 526, 529, 858, 860]
-
 full_df = pd.DataFrame()
 games_scraped = []
 failed_scrape = []
@@ -211,4 +208,58 @@ print(games_scraped)
 print('failed scrapes:')
 print(failed_scrape)
 
-full_df.to_csv("play_by_play_coord_2021.csv")
+# full_df.to_csv("data/play_by_play_coord_2021.csv")
+
+#################################################
+# Capfriendly salaries
+#################################################
+
+# Extract all the names for which salaries should be scraped
+play_by_play_2021 = pd.read_csv('data/play_by_play_2021.csv')
+
+names = []
+names_col = ['Away_p1_name', 'Away_p2_name', 'Away_p3_name',
+             'Away_p4_name', 'Away_p5_name', 'Away_p6_name',
+             'Home_p1_name', 'Home_p2_name', 'Home_p3_name',
+             'Home_p4_name', 'Home_p5_name', 'Home_p6_name']
+
+for col in names_col:
+    names.extend(play_by_play_2021[col].tolist())
+
+# player_list = pd.Series(names).value_counts().index
+player_list = pd.Series(names).value_counts().index[0:10]
+
+# Go through each player
+full_df = pd.DataFrame()
+players_scraped = []
+failed_scrape = []
+
+
+for player in player_list:
+
+    first = player.split(' ')[0]
+    last = player.split(' ')[1]
+
+    # Random sleeper
+    random_number = random.randint(1, 200) / 100
+    time.sleep(random_number)
+
+    # Extract data for current player
+    try:
+        current_player = get_salary_info(str(first), str(last))
+        full_df = full_df.append(current_player)
+        players_scraped.append(player)
+    except:
+        failed_scrape.append(player)
+
+# Save data
+full_df.to_csv('data/capfriendly_salaries_2021.csv')
+
+print('Salaries data downloaded')
+print(full_df.shape)
+
+print('successful scrapes:')
+print(players_scraped)
+print('failed scrapes:')
+print(failed_scrape)
+
