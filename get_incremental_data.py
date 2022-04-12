@@ -247,7 +247,9 @@ player_list = pd.Series(names).value_counts().index
 
 # Find only new names that need to be scraped
 existing_df = pd.read_csv("data/capfriendly_salaries_2021.csv")
-scraped_already = existing_df.player_name.value_counts().index
+# scraped_already = existing_df.player_name.value_counts().index
+scraped_already = list(map(lambda x: str(x.split('-')[0] + ' ' + x.split('-')[1]),
+                           list(existing_df.player_name.value_counts().index)))
 left_to_scrape = list(set(list(player_list)) - set(list(scraped_already)))
 
 # Go through each player

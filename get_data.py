@@ -248,7 +248,7 @@ for player in player_list:
         failed_scrape.append(player)
 
 # Save data
-full_df.to_csv('data/capfriendly_salaries_2021.csv')
+# full_df.to_csv('data/capfriendly_salaries_2021.csv')
 
 print('Salaries data downloaded')
 print(full_df.shape)
