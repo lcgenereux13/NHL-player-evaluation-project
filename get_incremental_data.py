@@ -250,6 +250,22 @@ existing_df = pd.read_csv("data/capfriendly_salaries_2021.csv")
 # scraped_already = existing_df.player_name.value_counts().index
 scraped_already = list(map(lambda x: str(x.split('-')[0] + ' ' + x.split('-')[1]),
                            list(existing_df.player_name.value_counts().index)))
+
+
+# Remove unsupported characters
+def clean_player_name(player_name):
+    player_name = player_name.replace('.', '')
+    player_name = player_name.replace("'", '')
+    player_name = player_name.replace('.', '')
+    player_name = player_name.replace('Ü', 'U')
+    player_name = player_name.replace('È', 'E')
+    player_name = player_name.replace('É', 'E')
+    return player_name
+
+
+scraped_already = list(map(lambda x: clean_player_name(x), scraped_already))
+player_list = list(map(lambda x: clean_player_name(x), player_list))
+
 left_to_scrape = list(set(list(player_list)) - set(list(scraped_already)))
 
 # Go through each player
