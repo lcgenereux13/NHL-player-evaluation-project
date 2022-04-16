@@ -281,6 +281,9 @@ random_grid = {'n_estimators': n_estimators,
                'min_samples_leaf': min_samples_leaf,
                'bootstrap': bootstrap}
 
+# Training model
+rf = RandomForestClassifier(random_state=42)
+
 # Use the random grid to search for best hyperparameters
 # Random search of parameters, using 3 fold cross validation,
 # search across 100 different combinations, and use all available cores
@@ -299,8 +302,6 @@ rf_random = RandomizedSearchCV(
 
 rf_random.fit(df_x_short, df_y_short)
 
-# Training model
-rf = RandomForestClassifier(random_state=42)
 #model = RandomForestClassifier(max_depth=10, min_samples_leaf=4, min_samples_split=10,
 #                                n_estimators=118, random_state=42).fit(df_x_short, df_y_short)
 model = rf_random.best_estimator_
