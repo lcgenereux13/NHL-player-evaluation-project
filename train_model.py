@@ -338,10 +338,10 @@ cmd_obj.ax_.set(
 plt.show()
 
 # Partial dependance of variables
-for i in range(0, len(df_x_short.columns)):
-    plot_partial_dependence(model, df_x_short, [i])
-    plt.show()
-    print('   ---   ---   ---   ---   ---   ---   ')
+#for i in range(0, len(df_x_short.columns)):
+#    plot_partial_dependence(model, df_x_short, [i])
+#    plt.show()
+#    print('   ---   ---   ---   ---   ---   ---   ')
 
 
 ############################################################################################
