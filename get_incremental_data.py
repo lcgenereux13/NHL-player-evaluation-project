@@ -128,7 +128,7 @@ full_df = full_df.drop(columns=['team_name'])
 
 # Save data
 existing_df = existing_df.append(full_df)
-# existing_df.to_csv("data/play_by_play_2021.csv")
+existing_df.to_csv("data/play_by_play_2021.csv")
 
 print('Play by play data downloaded')
 # print(full_df.away_team_abb.value_counts())
@@ -174,7 +174,7 @@ full_df["Shots"] = pd.to_numeric(full_df["Shots"])
 
 # Save data
 existing_df = existing_df.append(full_df)
-# existing_df.to_csv("data/game_summary_2021.csv")
+existing_df.to_csv("data/game_summary_2021.csv")
 
 # Print messages
 print('Game summary data downloaded')
@@ -224,7 +224,7 @@ print(failed_scrape)
 
 # Save data
 existing_df = existing_df.append(full_df)
-# existing_df.to_csv("data/play_by_play_coord_2021.csv")
+existing_df.to_csv("data/play_by_play_coord_2021.csv")
 
 
 #################################################
@@ -290,9 +290,12 @@ for player in left_to_scrape:
     except:
         failed_scrape.append(player)
 
+print('New scrapes:')
+print(full_df)
+
 # Save data
 existing_df = existing_df.append(full_df)
-# existing_df.to_csv("data/capfriendly_salaries_2021.csv")
+existing_df.to_csv("data/capfriendly_salaries_2021.csv")
 
 print('Salaries data downloaded')
 print(full_df.shape)
