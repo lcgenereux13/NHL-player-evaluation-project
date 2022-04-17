@@ -75,7 +75,7 @@ player_summary_df['pos'] = player_summary_df['position']
 
 # Extract pairings data
 agg_summary = create_summary(player_summary_df, shots_df, 'MTL', 'A')
-print(agg_summary)
+print(agg_summary[agg_summary['reference_player']==17])
 
 # Visualize (only for situations where players have at least 75 shots for together)
 agg_summary_material = agg_summary[agg_summary['shots_with_ref']>75]
@@ -94,4 +94,17 @@ plt.show()
 ################################################################################################
 
 player_data = pd.read_csv('data/player_summary_with_xG_salary_2021.csv')
-identify_nn(player_data, 'SUZUKI, NICK', 10)
+columns_to_scale = ['EV_TOI_seconds', 'PP_TOI_seconds', 'SH_TOI_seconds', 'EV_for_agg',
+                    'PP_for_agg', 'PK_for_agg', 'EV_against_agg', 'PP_against_agg',
+                    'PK_against_agg', 'Shots', 'Goals', 'Assists', 'Hits',
+                    'PIM', 'EV_netXG', 'EV_netXG_per_60']
+
+identify_nn(player_data, 'SUZUKI, NICK', 10, columns_to_scale)
+identify_nn(player_data, 'LEHKONEN, ARTTURI', 10, columns_to_scale)
+
+columns_to_scale = ['EV_TOI_seconds', 'PP_TOI_seconds', 'SH_TOI_seconds', 'EV_for_agg',
+                    'PP_for_agg', 'PK_for_agg', 'EV_against_agg', 'PP_against_agg',
+                    'PK_against_agg', 'EV_netXG', 'EV_netXG_per_60']
+
+identify_nn(player_data, 'SUZUKI, NICK', 10, columns_to_scale)
+identify_nn(player_data, 'LEHKONEN, ARTTURI', 10, columns_to_scale)
