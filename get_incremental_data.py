@@ -139,6 +139,7 @@ print(games_scraped)
 print('failed scrapes:')
 print(failed_scrape)
 
+
 #################################################
 # Game summary
 #################################################
