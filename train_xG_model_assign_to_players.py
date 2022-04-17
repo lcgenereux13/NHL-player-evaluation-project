@@ -406,7 +406,7 @@ print('Shots df saved')
 
 
 #####################################################################################
-### Summarize by player
+### Summarize by player - one row per player per game
 #####################################################################################
 
 game_summary = pd.read_csv('data/game_summary_2021.csv')
@@ -590,3 +590,148 @@ print(games_failed)
 print('data_saved')
 game_summaries_with_xG_agg.to_csv('data/game_sums_with_XG_21.csv')
 
+#####################################################################################
+### Aggregate per player (one row per player
+#####################################################################################
+
+# Removing goaltenders (for who we dont have playing minutes)
+game_summaries_with_xG_agg =game_summaries_with_xG_agg[game_summaries_with_xG_agg['position']!='G']
+
+# Finding year
+game_summaries_with_xG_agg['year'] = list(map(lambda x: x[0:4], game_summaries_with_xG_agg.year_game_home_away))
+
+# Remove players with no TOI at all (there are just 4 in 3 years)
+game_summaries_with_xG_agg['len_toi'] = list(map(lambda x: len(x), game_summaries_with_xG_agg.TOI))
+game_summaries_with_xG_agg = game_summaries_with_xG_agg[game_summaries_with_xG_agg['len_toi'] == 5]
+
+
+def convert_string_to_seconds(string_time):
+    'Converts string time (min:sec) to seconds'
+
+    # Deal with minutes
+    minutes = list(map(lambda x: x.split(':')[0], np.array(string_time)))
+    minutes = np.where(np.array(minutes) == '\xa0', '0', np.array(minutes))
+    minutes = minutes.astype('int')
+
+    # Deal with seconds
+    seconds = list(map(lambda x: x.split(':')[1], np.array(string_time)))
+    seconds = np.where(np.array(seconds) == '\xa0', '0', np.array(seconds))
+    seconds = seconds.astype('int')
+
+    # Total seconds
+    total_seconds = 60 * minutes + seconds
+    return total_seconds
+
+# Converting time to seconds
+game_summaries_with_xG_agg['TOI_seconds'] = convert_string_to_seconds(game_summaries_with_xG_agg.TOI)
+game_summaries_with_xG_agg['EV_TOI_seconds'] = convert_string_to_seconds(game_summaries_with_xG_agg.EV_TOI)
+game_summaries_with_xG_agg['PP_TOI_seconds'] = convert_string_to_seconds(game_summaries_with_xG_agg.PP_TOI)
+game_summaries_with_xG_agg['SH_TOI_seconds'] = convert_string_to_seconds(game_summaries_with_xG_agg.SH_TOI)
+
+# Adjust for empty space in game sheets
+game_summaries_with_xG_agg['Goals'] = np.where(game_summaries_with_xG_agg['Goals']== ' ', 0,
+                                               game_summaries_with_xG_agg['Goals'])
+game_summaries_with_xG_agg['Assists'] = np.where(game_summaries_with_xG_agg['Assists']== ' ', 0,
+                                               game_summaries_with_xG_agg['Assists'])
+game_summaries_with_xG_agg['PIM'] = np.where(game_summaries_with_xG_agg['PIM']== ' ', 0,
+                                               game_summaries_with_xG_agg['PIM'])
+game_summaries_with_xG_agg['Shots'] = np.where(game_summaries_with_xG_agg['Shots']== ' ', 0,
+                                               game_summaries_with_xG_agg['Shots'])
+game_summaries_with_xG_agg['Hits'] = np.where(game_summaries_with_xG_agg['Hits']== ' ', 0,
+                                               game_summaries_with_xG_agg['Hits'])
+
+# Adjust for '\xa0' in game sheets
+game_summaries_with_xG_agg['Goals'] = np.where(game_summaries_with_xG_agg['Goals']== '\xa0', 0,
+                                               game_summaries_with_xG_agg['Goals'])
+game_summaries_with_xG_agg['Assists'] = np.where(game_summaries_with_xG_agg['Assists']== '\xa0', 0,
+                                               game_summaries_with_xG_agg['Assists'])
+game_summaries_with_xG_agg['PIM'] = np.where(game_summaries_with_xG_agg['PIM']== '\xa0', 0,
+                                               game_summaries_with_xG_agg['PIM'])
+game_summaries_with_xG_agg['Shots'] = np.where(game_summaries_with_xG_agg['Shots']== '\xa0', 0,
+                                               game_summaries_with_xG_agg['Shots'])
+game_summaries_with_xG_agg['Hits'] = np.where(game_summaries_with_xG_agg['Hits']== '\xa0', 0,
+                                               game_summaries_with_xG_agg['Hits'])
+
+# Convert column types
+game_summaries_with_xG_agg[['TOI_seconds', 'EV_TOI_seconds', 'PP_TOI_seconds', 'SH_TOI_seconds',
+                                     'EV_for_agg', 'PP_for_agg', 'PK_for_agg',
+                                      'EV_against_agg', 'PP_against_agg', 'PK_against_agg',
+                                     'Goals', 'Assists', 'PIM', 'Shots', 'Hits']] = \
+                                    game_summaries_with_xG_agg[['TOI_seconds', 'EV_TOI_seconds', 'PP_TOI_seconds',
+                                                               'SH_TOI_seconds', 'EV_for_agg', 'PP_for_agg',
+                                                               'PK_for_agg', 'EV_against_agg', 'PP_against_agg',
+                                                               'PK_against_agg', 'Goals', 'Assists',
+                                                               'PIM',
+                                                                'Shots',
+                                                                'Hits']].apply(pd.to_numeric)
+
+# Retain only 2021 data
+agg_xg_2021 = game_summaries_with_xG_agg[game_summaries_with_xG_agg['year']=='2021']
+
+# Extract players most recent position
+player_most_recent_position = game_summaries_with_xG_agg[['player_name','position']].groupby('player_name').tail(1)
+
+# Pivot to aggregate by player
+pivot_v1 = pd.pivot_table(agg_xg_2021,
+                            values = ['TOI_seconds', 'EV_TOI_seconds', 'PP_TOI_seconds', 'SH_TOI_seconds',
+                                     'EV_for_agg', 'PP_for_agg', 'PK_for_agg',
+                                      'EV_against_agg', 'PP_against_agg', 'PK_against_agg',
+                                     'Goals', 'Assists', 'Rating', 'PIM', 'Shots', 'Hits'
+                                     ],
+                            index = 'player_name',
+                            aggfunc=['sum','count'])
+
+# Clean
+pivot_v2 = pd.DataFrame({'Player': pivot_v1.index.values,
+              'GP': pivot_v1['count']['EV_TOI_seconds'].values,
+              'EV_TOI_seconds': pivot_v1['sum']['EV_TOI_seconds'].values,
+              'PP_TOI_seconds': pivot_v1['sum']['PP_TOI_seconds'].values,
+              'SH_TOI_seconds': pivot_v1['sum']['SH_TOI_seconds'].values,
+              'EV_for_agg': pivot_v1['sum']['EV_for_agg'].values,
+              'PP_for_agg': pivot_v1['sum']['PP_for_agg'].values,
+              'PK_for_agg': pivot_v1['sum']['PK_for_agg'].values,
+              'EV_against_agg': pivot_v1['sum']['EV_against_agg'].values,
+              'PP_against_agg': pivot_v1['sum']['PP_against_agg'].values,
+              'PK_against_agg': pivot_v1['sum']['PK_against_agg'].values,
+              'Shots': pivot_v1['sum']['Shots'].values,
+              'Goals': pivot_v1['sum']['Goals'].values,
+              'Assists': pivot_v1['sum']['Assists'].values,
+              'Hits': pivot_v1['sum']['Hits'].values,
+              'PIM': pivot_v1['sum']['PIM'].values
+              })
+
+# Add calculated fields
+pivot_v2['EV_netXG'] = pivot_v2['EV_for_agg'] - pivot_v2['EV_against_agg']
+pivot_v2['EV_netXG_per_60'] = pivot_v2['EV_netXG'] / (pivot_v2['EV_TOI_seconds']/3600)
+pivot_v2['clutch_factor'] = (pivot_v2['Assists'] + pivot_v2['Goals'])/ \
+                            (pivot_v2['EV_for_agg'] + pivot_v2['PP_for_agg'] + pivot_v2['PK_for_agg'])
+# Sort from highest to lowest net xG
+pivot_v2 = pivot_v2.sort_values(by='EV_netXG_per_60', ascending=False)
+
+# Add most recent team and position for each player
+pivot_v2 = pivot_v2.merge(player_most_recent_team, how='left', left_on='Player', right_on='player_name')
+pivot_v2 = pivot_v2.merge(player_most_recent_position, how='left', left_on='Player', right_on='player_name')
+
+# Read in salaries
+salaries_data = pd.read_csv('data/capfriendly_salaries_2021.csv')
+salaries_data['clean_name'] = list(map(lambda x: str(str(x.split('-')[1])+', '+str(x.split('-')[0])),
+                                       salaries_data.player_name))
+# Filtering for 2021 season
+salaries_data_min=salaries_data[salaries_data['season']=='2021-22'][['clean_name','cap_hit']]
+salaries_data_min=salaries_data_min.fillna(0)
+salaries_data_min=salaries_data_min[salaries_data_min['cap_hit']!=0]
+# Ensuring that I only get one salary per player
+salaries_data_min = salaries_data_min[['clean_name','cap_hit']].groupby('clean_name').head(1)
+
+# Add salary for each player
+pivot_v2 = pivot_v2.merge(salaries_data_min, how='left', left_on='Player', right_on='clean_name')
+
+# Convert salary strings to numeric
+pivot_v3 = pivot_v2.fillna('$0')
+pivot_v3['num_salary']= list(map(lambda x: int(x.split('$')[1].replace(',','')), pivot_v3.cap_hit))
+
+# Save data
+pivot_v3.to_csv('player_summary_with_xG_salary_2021.csv')
+
+print('Top player sample:')
+print(pivot_v3[pivot_v3['GP']>40][0:50])
