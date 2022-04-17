@@ -6,6 +6,7 @@ from matplotlib.pyplot import figure
 
 from src.plot_game_summary import plot_game_summary
 from src.evaluate_pairings import create_summary
+from src.identify_nearest_neighbors import identify_nn
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -91,3 +92,6 @@ plt.show()
 ################################################################################################
 # Nearest neighbors
 ################################################################################################
+
+player_data = pd.read_csv('data/player_summary_with_xG_salary_2021.csv')
+identify_nn(player_data, 'SUZUKI, NICK', 10)
