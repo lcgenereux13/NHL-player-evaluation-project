@@ -101,5 +101,10 @@ game_play = game_play.append(full_df)
 print(game_play.shape)
 
 # Save as csv
-game_play.to_csv('data/play_by_play_2021.csv')
+# game_play.to_csv('data/play_by_play_2021.csv')
 print('new game saved')
+
+print('Game summaries with Xg')
+print(pd.read_csv('data/game_sums_with_XG_21.csv').shape)
+gam_sum_xg = pd.read_csv('data/game_sums_with_XG_21.csv')
+print(len(gam_sum_xg.year_game_home_away.value_counts()))
