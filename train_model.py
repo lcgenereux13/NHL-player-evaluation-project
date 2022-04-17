@@ -23,7 +23,6 @@ from matplotlib.pyplot import figure
 import pandas as pd
 
 import pickle
-
 import seaborn as sns
 
 from sklearn.model_selection import train_test_split
@@ -54,6 +53,7 @@ play_by_play['clean_game'] = play_by_play['year'].astype(str) +'-' + play_by_pla
 play_by_play['full_play_id'] = play_by_play['clean_game'] +  '-' +  \
                                   play_by_play['Period'].astype(str) +  '-' + play_by_play['Start'].astype(str)
 
+print('Play by play data read in')
 
 ############################################################################################
 # Import 3 years of X-Y coordinates
@@ -82,6 +82,7 @@ x_y_coord['full_play_id'] = x_y_coord['clean_game'] +  '-' +  \
 x_y_coord = x_y_coord[['full_play_id', 'x_coord', 'y_coord']].drop_duplicates()
 x_y_coord = x_y_coord.groupby('full_play_id').head(1)
 
+print('X-Y coordinates data read in')
 
 ############################################################################################
 # Clean shots data
@@ -200,6 +201,8 @@ for i in shots.index.values:
 
 shots['empty_net_goal'] = empty_net_goal
 
+print('Empty net goals removed')
+
 ############################################################################################
 # Calculate shot angles
 ############################################################################################
@@ -217,6 +220,7 @@ shots['angle'] = list(map(lambda x,y: calc_angle_from_middle(x, y),
 shots['shot_dist'] = list(map(lambda x: int(x.split(',')[len(x.split(','))-1][1:].split(' ')[0]), shots['Details']))
 shots['shot_type'] = list(map(lambda x: x.split(',')[1], shots['Details']))
 
+print('Shot angles added')
 
 ############################################################################################
 # Add final training set info
@@ -343,6 +347,7 @@ plt.show()
 #    plt.show()
 #    print('   ---   ---   ---   ---   ---   ---   ')
 
+print('Model trained using random grid search cv')
 
 ############################################################################################
 # Predict goal probability on full set
@@ -357,3 +362,41 @@ shots['goal_prob'] = list(map(lambda x: x[1], predictions))
 # save the model to disk
 filename = 'data/model/test_model_dump.sav'
 pickle.dump(model, open(filename, 'wb'))
+
+# Read in model
+loaded_model = pickle.load(open('data/model/test_model_dump.sav', 'rb'))
+
+# Make predictions
+pred_loaded_model = loaded_model.predict_proba(shots_predictors)
+shots['goal_prob_loaded_model'] = list(map(lambda x: x[1], pred_loaded_model))
+
+
+# Round to nearest 0.05
+def round_nearest(num: float) -> float:
+    num, to = Decimal(str(num)), Decimal(0.05)
+    return float(round(num / to) * to)
+
+shots['rounded_prob'] = list(map(lambda x: round(round_nearest(x),4), shots['goal_prob']))
+
+
+#####################################################################################
+### Convert probabilities to expected goals
+#####################################################################################
+
+# Observed goals scored per probability tranche
+summary = pd.pivot_table(shots, values='goal_bin', index=['rounded_prob'], aggfunc=['count', np.sum])
+
+prob_goal_mapping = pd.DataFrame({'rounded_prob':(summary['sum']['goal_bin'] / summary['count']['goal_bin']).index,
+                                  'xG':(summary['sum']['goal_bin'] / summary['count']['goal_bin']).values})
+print('Goal probability to xG mapping:')
+print(prob_goal_mapping)
+
+print('Expected goals merged to shots df')
+shots = shots.merge(prob_goal_mapping, how='left', on='rounded_prob')
+
+#####################################################################################
+### Save shots
+#####################################################################################
+
+shots.to_csv('data/shots_and_xG.csv')
+print('Shots df saved')
