@@ -315,14 +315,14 @@ model = rf_random.best_estimator_
 y_pred = model.predict(df_x_short)
 
 # Assessing model importance
-feature_importance = model.feature_importances_
-sorted_idx = np.argsort(feature_importance)
-pos = np.arange(sorted_idx.shape[0]) + .5
-fig = plt.figure(figsize=(24, 12))
-plt.subplot(1, 2, 1)
-plt.barh(pos, feature_importance[sorted_idx], align='center')
-plt.yticks(pos, np.array(df_x_short.columns)[sorted_idx])
-plt.title('Feature Importance (Random Forest)')
+#feature_importance = model.feature_importances_
+#sorted_idx = np.argsort(feature_importance)
+#pos = np.arange(sorted_idx.shape[0]) + .5
+#fig = plt.figure(figsize=(24, 12))
+#plt.subplot(1, 2, 1)
+#plt.barh(pos, feature_importance[sorted_idx], align='center')
+#plt.yticks(pos, np.array(df_x_short.columns)[sorted_idx])
+#plt.title('Feature Importance (Random Forest)')
 
 # Evaluating model
 c_matrix_test = confusion_matrix(df_y_short, y_pred)
@@ -336,13 +336,13 @@ f1_micro = np.round(sklearn.metrics.f1_score(df_y_short, y_pred, average='micro'
 print('Acc: ', acc, ' Prec: ', prec, ' Rec: ', rec, ' f1: ', f1)
 
 # Plot confusion matrix
-cmd_obj = ConfusionMatrixDisplay(c_matrix_test, display_labels=['no goal', 'goal'])
-cmd_obj.plot()
-cmd_obj.ax_.set(
-                title='Confusion Matrix',
-                xlabel='Predicted behavior',
-                ylabel='Actual behavior')
-plt.show()
+#cmd_obj = ConfusionMatrixDisplay(c_matrix_test, display_labels=['no goal', 'goal'])
+#cmd_obj.plot()
+#cmd_obj.ax_.set(
+               # title='Confusion Matrix',
+               # xlabel='Predicted behavior',
+               # ylabel='Actual behavior')
+#plt.show()
 
 # Partial dependance of variables
 #for i in range(0, len(df_x_short.columns)):
@@ -669,7 +669,7 @@ game_summaries_with_xG_agg[['TOI_seconds', 'EV_TOI_seconds', 'PP_TOI_seconds', '
 agg_xg_2021 = game_summaries_with_xG_agg[game_summaries_with_xG_agg['year']=='2021']
 
 # Extract players most recent position
-player_most_recent_position = game_summaries_with_xG_agg[['player_name','position']].groupby('player_name').tail(1)
+player_most_recent_position = game_summaries_with_xG_agg[['player_name','player_number','position']].groupby('player_name').tail(1)
 
 # Pivot to aggregate by player
 pivot_v1 = pd.pivot_table(agg_xg_2021,
@@ -731,7 +731,7 @@ pivot_v3 = pivot_v2.fillna('$0')
 pivot_v3['num_salary']= list(map(lambda x: int(x.split('$')[1].replace(',','')), pivot_v3.cap_hit))
 
 # Save data
-pivot_v3.to_csv('player_summary_with_xG_salary_2021.csv')
+pivot_v3.to_csv('data/player_summary_with_xG_salary_2021.csv')
 
 print('Top player sample:')
 print(pivot_v3[pivot_v3['GP']>40][0:50])
