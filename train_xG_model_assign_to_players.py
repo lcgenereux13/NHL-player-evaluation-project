@@ -29,6 +29,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import RandomizedSearchCV
 
+import warnings
+warnings.filterwarnings("ignore")
+
 
 ############################################################################################
 # Import 3 years of play by play
@@ -400,3 +403,190 @@ shots = shots.merge(prob_goal_mapping, how='left', on='rounded_prob')
 
 shots.to_csv('data/shots_and_xG.csv')
 print('Shots df saved')
+
+
+#####################################################################################
+### Summarize by player
+#####################################################################################
+
+game_summary = pd.read_csv('data/game_summary_2021.csv')
+game_summary = game_summary.reset_index()
+game_summary['game'] = list(map(lambda x: int(x.split('-')[1]), game_summary.year_game_home_away))
+game_summary['year'] = list(map(lambda x: int(x.split('-')[0][0:4]), game_summary.year_game_home_away))
+
+# Adjust team names for accents
+team_dict = pd.DataFrame({'team_name': ['ANAHEIM DUCKS',
+  'ARIZONA COYOTES',
+  'BOSTON BRUINS',
+  'BUFFALO SABRES',
+  'CAROLINA HURRICANES',
+  'COLUMBUS BLUE JACKETS',
+  'CALGARY FLAMES',
+  'CHICAGO BLACKHAWKS',
+  'COLORADO AVALANCHE',
+  'DALLAS STARS',
+  'DETROIT RED WINGS',
+  'EDMONTON OILERS',
+  'FLORIDA PANTHERS',
+  'LOS ANGELES KINGS',
+  'MINNESOTA WILD',
+  'MONTREAL CANADIENS',
+  'MONTRÉAL CANADIENS',
+  'NEW JERSEY DEVILS',
+  'NASHVILLE PREDATORS',
+  'NEW YORK ISLANDERS',
+  'NEW YORK RANGERS',
+  'OTTAWA SENATORS',
+  'PHILADELPHIA FLYERS',
+  'PITTSBURGH PENGUINS',
+  'SAN JOSE SHARKS',
+  'SEATTLE KRAKEN',
+  'ST. LOUIS BLUES',
+  'TAMPA BAY LIGHTNING',
+  'TORONTO MAPLE LEAFS',
+  'VEGAS GOLDEN KNIGHTS',
+  'VANCOUVER CANUCKS',
+  'WINNIPEG JETS',
+  'WASHINGTON CAPITALS'],
+ 'team_abb': ['ANA',
+  'ARI',
+  'BOS',
+  'BUF',
+  'CAR',
+  'CBJ',
+  'CGY',
+  'CHI',
+  'COL',
+  'DAL',
+  'DET',
+  'EDM',
+  'FLA',
+  'LAK',
+  'MIN',
+  'MTL',
+  'MTL',
+  'NJD',
+  'NSH',
+  'NYI',
+  'NYR',
+  'OTT',
+  'PHI',
+  'PIT',
+  'SJS',
+  'SEA',
+  'STL',
+  'TBL',
+  'TOR',
+  'VGK',
+  'VAN',
+  'WPG',
+  'WSH']})
+game_summary = game_summary.merge(team_dict, how = 'left', left_on='team', right_on='team_name')
+
+# Finding the most recent team for each player
+game_summary=game_summary[game_summary['year']>=2021]
+game_summary= game_summary.sort_values(by='game')
+player_most_recent_team = game_summary[['player_name','team_abb']].groupby('player_name').tail(1)
+
+# Identify unique games
+unique_games = game_summary.year_game_home_away.value_counts().index
+
+
+def game_summary_with_XG(shots, game_summary, game_id):
+    # Subset game summary for game only
+    subset_summary = game_summary[game_summary['year_game_home_away'] == game_id]
+
+    # Subset shots for game only
+    subset_shots = shots[shots['year_game_home_away'] == game_id]
+    subset_shots['team_for_players'] = np.where(subset_shots.team_for == subset_shots.home_team_abb,
+                                                subset_shots.home_num_array, subset_shots.away_num_array)
+    subset_shots['team_against_players'] = np.where(subset_shots.team_for == subset_shots.away_team_abb,
+                                                    subset_shots.home_num_array, subset_shots.away_num_array)
+
+    # Create summary
+    EV_for_agg = []
+    PP_for_agg = []
+    PK_for_agg = []
+    EV_against_agg = []
+    PP_against_agg = []
+    PK_against_agg = []
+
+    for i in range(0, subset_summary.shape[0]):
+
+        # For each individual player
+        player_team = subset_summary.team_abb.iloc[i]
+        player_num = subset_summary.player_number.iloc[i]
+
+        EV_for = []
+        PP_for = []
+        PK_for = []
+        EV_against = []
+        PP_against = []
+        PK_against = []
+
+        # For each row of gameplay, check if player was involved and compile stats
+        for j in range(0, subset_shots.shape[0]):
+
+            # If player is on ice as "for team"
+            if ((player_team == subset_shots.team_for.iloc[j]) & \
+                    (str(player_num) in subset_shots.team_for_players.iloc[j])):
+                # print(subset_shots.team_for_players.iloc[j])
+                if subset_shots.Strength.iloc[j] == 'EV':
+                    EV_for.append(subset_shots.xG.iloc[j])
+                elif subset_shots.Strength.iloc[j] == 'PP':
+                    PP_for.append(subset_shots.xG.iloc[j])
+                else:
+                    PK_for.append(subset_shots.xG.iloc[j])
+
+            # If player is on ice as "Against team"
+            if (str(player_num) in subset_shots.team_against_players.iloc[j]) & \
+                    (player_team != subset_shots.team_for.iloc[j]):
+                # print(subset_shots.team_against_players.iloc[j])
+                if subset_shots.Strength.iloc[j] == 'EV':
+                    EV_against.append(subset_shots.xG.iloc[j])
+                elif subset_shots.Strength.iloc[j] == 'PP':
+                    PK_against.append(subset_shots.xG.iloc[j])
+                else:
+                    PP_against.append(subset_shots.xG.iloc[j])
+
+        # Add up stats for player
+        EV_for_agg.append(sum(EV_for))
+        PP_for_agg.append(sum(PP_for))
+        PK_for_agg.append(sum(PK_for))
+        EV_against_agg.append(sum(EV_against))
+        PP_against_agg.append(sum(PP_against))
+        PK_against_agg.append(sum(PK_against))
+
+    subset_summary['EV_for_agg'] = EV_for_agg
+    subset_summary['PP_for_agg'] = PP_for_agg
+    subset_summary['PK_for_agg'] = PK_for_agg
+    subset_summary['EV_against_agg'] = EV_against_agg
+    subset_summary['PP_against_agg'] = PP_against_agg
+    subset_summary['PK_against_agg'] = PK_against_agg
+
+    return subset_summary
+
+# Run function
+games_computed = []
+games_failed = []
+
+# Create empty pd
+game_summaries_with_xG_agg = pd.DataFrame()
+
+for game in unique_games:
+    try:
+        unique_game_summary = game_summary_with_XG(shots, game_summary, game)
+        game_summaries_with_xG_agg = game_summaries_with_xG_agg.append(unique_game_summary)
+        games_computed.append(game)
+    except:
+        games_failed.append(game)
+
+print('xG stats aggregated by player for each game')
+print('Games successful:')
+print(games_computed)
+print('Games failed:')
+print(games_failed)
+
+print('data_saved')
+game_summaries_with_xG_agg.to_csv('data/game_sums_with_XG_21.csv')
+
