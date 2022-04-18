@@ -108,3 +108,9 @@ columns_to_scale = ['EV_TOI_seconds', 'PP_TOI_seconds', 'SH_TOI_seconds', 'EV_fo
 
 identify_nn(player_data, 'SUZUKI, NICK', 10, columns_to_scale)
 identify_nn(player_data, 'LEHKONEN, ARTTURI', 10, columns_to_scale)
+
+columns_to_scale = ['EV_for_per_60', 'PP_for_per_60', 'PK_for_per_60', 'EV_against_per_60',
+                    'PP_against_per_60', 'PK_against_per_60', 'EV_netXG_per_60']
+
+identify_nn(player_data, 'SUZUKI, NICK', 15, columns_to_scale)
+identify_nn(player_data, 'LEHKONEN, ARTTURI', 15, columns_to_scale)

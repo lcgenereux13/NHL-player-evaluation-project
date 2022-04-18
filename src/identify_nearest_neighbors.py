@@ -11,10 +11,19 @@ def identify_nn(player_data, player_name, number_nn, feature_columns):
     # Columns used to find nn
     columns_to_scale = feature_columns
 
+    # Clean columns
+    for column in columns_to_scale:
+        player_data[column] = np.where(player_data[column] == '$0', 0, player_data[column])
+        player_data[column] = np.where(player_data[column] == np.inf, 0, player_data[column])
+        player_data[column] = np.where(player_data[column] == -np.inf, 0, player_data[column])
+        player_data[column] = player_data[column].fillna(0)
+        player_data[column] = player_data[column].apply(pd.to_numeric)
+        player_data[column] = np.where(player_data[column] > 100, 100, player_data[column])
+
     # Scaled df
     scaled_df = pd.DataFrame(min_max_scaler.fit_transform(player_data[columns_to_scale]))
 
-    # Find nearest neighbords
+    # Find nearest neighbors
     knn = NearestNeighbors(n_neighbors=number_nn)
     knn.fit(scaled_df)
     distance_mat, neighbours_mat = knn.kneighbors(scaled_df)

@@ -701,10 +701,18 @@ pivot_v2 = pd.DataFrame({'Player': pivot_v1.index.values,
               })
 
 # Add calculated fields
+pivot_v2['EV_for_per_60'] = pivot_v2['EV_for_agg'] / (pivot_v2['EV_TOI_seconds']/3600)
+pivot_v2['PP_for_per_60'] = pivot_v2['PP_for_agg'] / (pivot_v2['PP_TOI_seconds']/3600)
+pivot_v2['PK_for_per_60'] = pivot_v2['PK_for_agg'] / (pivot_v2['SH_TOI_seconds']/3600)
+pivot_v2['EV_against_per_60'] = pivot_v2['EV_against_agg'] / (pivot_v2['EV_TOI_seconds']/3600)
+pivot_v2['PP_against_per_60'] = pivot_v2['PP_against_agg'] / (pivot_v2['PP_TOI_seconds']/3600)
+pivot_v2['PK_against_per_60'] = pivot_v2['PK_against_agg'] / (pivot_v2['SH_TOI_seconds']/3600)
+
 pivot_v2['EV_netXG'] = pivot_v2['EV_for_agg'] - pivot_v2['EV_against_agg']
 pivot_v2['EV_netXG_per_60'] = pivot_v2['EV_netXG'] / (pivot_v2['EV_TOI_seconds']/3600)
 pivot_v2['clutch_factor'] = (pivot_v2['Assists'] + pivot_v2['Goals'])/ \
                             (pivot_v2['EV_for_agg'] + pivot_v2['PP_for_agg'] + pivot_v2['PK_for_agg'])
+
 # Sort from highest to lowest net xG
 pivot_v2 = pivot_v2.sort_values(by='EV_netXG_per_60', ascending=False)
 
