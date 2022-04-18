@@ -114,3 +114,6 @@ columns_to_scale = ['EV_for_per_60', 'PP_for_per_60', 'PK_for_per_60', 'EV_again
 
 identify_nn(player_data, 'SUZUKI, NICK', 15, columns_to_scale)
 identify_nn(player_data, 'LEHKONEN, ARTTURI', 15, columns_to_scale)
+
+# Done!
+

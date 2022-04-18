@@ -743,3 +743,5 @@ pivot_v3.to_csv('data/player_summary_with_xG_salary_2021.csv')
 
 print('Top player sample:')
 print(pivot_v3[pivot_v3['GP']>40][0:50])
+
+# Done!
