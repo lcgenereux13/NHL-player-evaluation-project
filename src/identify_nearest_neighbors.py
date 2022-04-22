@@ -1,3 +1,4 @@
+import sklearn
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import NearestNeighbors
 import matplotlib
