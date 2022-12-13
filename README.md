@@ -1,4 +1,4 @@
-# hockey_analytics_lcg
+# Instructions to run code
 
 If running for the first time, begin by running "get data" script
 
